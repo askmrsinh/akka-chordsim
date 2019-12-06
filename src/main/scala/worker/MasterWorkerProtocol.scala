@@ -11,4 +11,7 @@ object MasterWorkerProtocol {
   // Messages to Workers
   case object WorkIsReady
   case class Ack(id: String)
+
+  //Messages between Workers
+  case class Joined()
 }

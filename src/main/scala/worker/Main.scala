@@ -6,6 +6,8 @@ import akka.actor.ActorSystem
 import akka.persistence.cassandra.testkit.CassandraLauncher
 import com.typesafe.config.{Config, ConfigFactory}
 
+import scala.collection.mutable
+
 object Main {
 
   // note that 2551 and 2552 are expected to be seed nodes though, even if
@@ -57,7 +59,7 @@ object Main {
     // startFrontEnd(3000)
     // startFrontEnd(3001)
     // two worker nodes with two worker actors each
-    startWorker(5001, 3)
+    startWorker(5001, 8)
   }
 
   /**
@@ -91,12 +93,23 @@ object Main {
       MasterSingleton.proxyProps(system),
       name = "masterProxy")
 
-    (1 to workers).foreach(n =>{
+    //creating worker nodes and initializing finger table for eacg worker node
+    (0 to workers-1).foreach(n =>{
+      var ft = new mutable.HashMap[String, String]()
+
+      (1 to log2(workers)).map(x => {
+          ft += (x.toString ->  ((n + Math.pow(2, x-1)) % workers).toString)
+      });
+
+      println("Printing finger table for "+ n + " : " + ft)
       Worker.id = n
+      Worker.fingerTable = ft
       system.actorOf(Worker.props(masterProxy), s"worker-$n")}
     )
   }
   // #worker
+  val lnOf2 = scala.math.log(2) // natural log of 2
+  def log2(x: Int): Int = (scala.math.log(x) / lnOf2).toInt
 
   def config(port: Int, role: String): Config =
     ConfigFactory.parseString(s"""
