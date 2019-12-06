@@ -57,8 +57,7 @@ object Main {
     // startFrontEnd(3000)
     // startFrontEnd(3001)
     // two worker nodes with two worker actors each
-    startWorker(5001, 2)
-    startWorker(5002, 2)
+    startWorker(5001, 3)
   }
 
   /**
@@ -92,8 +91,9 @@ object Main {
       MasterSingleton.proxyProps(system),
       name = "masterProxy")
 
-    (1 to workers).foreach(n =>
-      system.actorOf(Worker.props(masterProxy), s"worker-$n")
+    (1 to workers).foreach(n =>{
+      Worker.id = n
+      system.actorOf(Worker.props(masterProxy), s"worker-$n")}
     )
   }
   // #worker

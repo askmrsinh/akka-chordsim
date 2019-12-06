@@ -15,7 +15,7 @@ import scala.concurrent.duration._
 object FrontEnd {
 
   var id = 3000
-  def props: Props = Props(new FrontEnd(id))
+  def props: Props = Props(new FrontEnd(id.toString))
 
   private case object NotOk
   private case object Tick
@@ -23,7 +23,7 @@ object FrontEnd {
 }
 
 // #front-end
-class FrontEnd(id: Int) extends Actor with ActorLogging with Timers {
+class FrontEnd(id: String) extends Actor with ActorLogging with Timers {
   import FrontEnd._
   import context.dispatcher
 

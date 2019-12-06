@@ -1,7 +1,5 @@
 package worker
 
-import java.util.UUID
-
 import akka.actor.SupervisorStrategy.{Restart, Stop}
 import akka.actor._
 
@@ -13,17 +11,17 @@ import scala.concurrent.duration._
  */
 object Worker {
 
-  def props(masterProxy: ActorRef): Props = Props(new Worker(masterProxy))
+  var id = 0
+  def props(masterProxy: ActorRef): Props = Props(new Worker(masterProxy, id.toString))
 
 }
 
-class Worker(masterProxy: ActorRef)
+class Worker(masterProxy: ActorRef, id: String)
   extends Actor with Timers with ActorLogging {
   import MasterWorkerProtocol._
   import context.dispatcher
 
-
-  val workerId = UUID.randomUUID().toString
+  val workerId = id
   val registerInterval = context.system.settings.config.getDuration("distributed-workers.worker-registration-interval").getSeconds.seconds
 
   val registerTask = context.system.scheduler.schedule(0.seconds, registerInterval, masterProxy, RegisterWorker(workerId))
@@ -44,7 +42,7 @@ class Worker(masterProxy: ActorRef)
       masterProxy ! WorkerRequestsWork(workerId)
 
     case Work(workId, job: Int) =>
-      log.info("Got work: {}", job)
+      log.info("Worker {}, Got work: {}", workerId, job)
       currentWorkId = Some(workId)
       workExecutor ! WorkExecutor.DoWork(job)
       context.become(working)
@@ -53,13 +51,13 @@ class Worker(masterProxy: ActorRef)
 
   def working: Receive = {
     case WorkExecutor.WorkComplete(result) =>
-      log.info("Work is complete. Result {}.", result)
+      log.info("Worker {}, work {} is complete. Result {}.", workerId, workId, result)
       masterProxy ! WorkIsDone(workerId, workId, result)
       context.setReceiveTimeout(5.seconds)
       context.become(waitForWorkIsDoneAck(result))
 
     case _: Work =>
-      log.warning("Yikes. Master told me to do work, while I'm already working.")
+      log.warning("Worker {}, Yikes. Master told me to do work, while I'm already working.", workerId)
 
   }
 
@@ -70,7 +68,7 @@ class Worker(masterProxy: ActorRef)
       context.become(idle)
 
     case ReceiveTimeout =>
-      log.info("No ack from master, resending work result")
+      log.info("Worker {}, No ack from master, resending work {} result", workerId, workId)
       masterProxy ! WorkIsDone(workerId, workId, result)
 
   }

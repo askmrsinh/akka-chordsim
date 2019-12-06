@@ -70,7 +70,7 @@ object DistributedWorkerSpec {
     }
   }
 
-  class RemoteControllableFrontend extends FrontEnd(defaultId) {
+  class RemoteControllableFrontend extends FrontEnd(defaultId.toString) {
 
     var currentWorkIdAndSender: Option[(String, ActorRef)] = None
 
@@ -142,14 +142,14 @@ class DistributedWorkerSpec(_system: ActorSystem)
     val masterProxy = workerSystem.actorOf(
       MasterSingleton.proxyProps(workerSystem),
       name = "masterProxy")
-    val fastWorkerProps = Props(new Worker(masterProxy) {
+    val fastWorkerProps = Props(new Worker(masterProxy, defaultId.toString) {
       override def createWorkExecutor(): ActorRef = context.actorOf(Props(new FastWorkExecutor), "fast-executor")
     })
 
     for (n <- 1 to 3)
       workerSystem.actorOf(fastWorkerProps, "worker-" + n)
 
-    val flakyWorkerProps = Props(new Worker(masterProxy) {
+    val flakyWorkerProps = Props(new Worker(masterProxy, defaultId.toString) {
       override def createWorkExecutor(): ActorRef = {
         context.actorOf(Props(new FlakyWorkExecutor), "flaky-executor")
       }
