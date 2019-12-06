@@ -18,6 +18,8 @@ import scala.concurrent.{Await, Future}
 
 object DistributedWorkerSpec {
 
+  val defaultId = 1
+
   val clusterConfig = ConfigFactory.parseString("""
     akka {
       persistence {
@@ -68,7 +70,7 @@ object DistributedWorkerSpec {
     }
   }
 
-  class RemoteControllableFrontend extends FrontEnd {
+  class RemoteControllableFrontend extends FrontEnd(defaultId) {
 
     var currentWorkIdAndSender: Option[(String, ActorRef)] = None
 

@@ -1,7 +1,6 @@
 package worker
 
 import java.io.File
-import java.util.concurrent.CountDownLatch
 
 import akka.actor.ActorSystem
 import akka.persistence.cassandra.testkit.CassandraLauncher
@@ -16,34 +15,47 @@ object Main {
   val frontEndPortRange = 3000 to 3999
 
   def main(args: Array[String]): Unit = {
-    args.headOption match {
+//    args.headOption match {
+//
+//      case None =>
+//        startClusterInSameJvm()
+//
+//      case Some(portString) if portString.matches("""\d+""") =>
+//        val port = portString.toInt
+//        if (backEndPortRange.contains(port)) startBackEnd(port)
+//        else if (frontEndPortRange.contains(port)) startFrontEnd(port)
+//        else startWorker(port, args.lift(1).map(_.toInt).getOrElse(1))
+//
+//      case Some("cassandra") =>
+//        startCassandraDatabase()
+//        println("Started Cassandra, press Ctrl + C to kill")
+//        new CountDownLatch(1).await()
+//
+//    }
 
-      case None =>
-        startClusterInSameJvm()
+    val numberOfUsers = 10 //args(0).toInt;
+    //val minRequests = args(1).toInt;
+    //val maxRequests = args(2).toInt;
+    //val ratio = args(3);
+    //val interval = args(4).toInt;
 
-      case Some(portString) if portString.matches("""\d+""") =>
-        val port = portString.toInt
-        if (backEndPortRange.contains(port)) startBackEnd(port)
-        else if (frontEndPortRange.contains(port)) startFrontEnd(port)
-        else startWorker(port, args.lift(1).map(_.toInt).getOrElse(1))
-
-      case Some("cassandra") =>
-        startCassandraDatabase()
-        println("Started Cassandra, press Ctrl + C to kill")
-        new CountDownLatch(1).await()
-
-    }
+    startClusterInSameJvm(numberOfUsers)
   }
 
-  def startClusterInSameJvm(): Unit = {
+  def startClusterInSameJvm(numberOfUsers: Int): Unit = {
     startCassandraDatabase()
+
+    //creating client/front end nodes
+    for (i <- 3000 until 3000 + numberOfUsers) {
+      startFrontEnd(i)
+    }
 
     // two backend nodes
     startBackEnd(2551)
     startBackEnd(2552)
     // two front-end nodes
-    startFrontEnd(3000)
-    startFrontEnd(3001)
+    // startFrontEnd(3000)
+    // startFrontEnd(3001)
     // two worker nodes with two worker actors each
     startWorker(5001, 2)
     startWorker(5002, 2)
@@ -63,6 +75,7 @@ object Main {
    */
   // #front-end
   def startFrontEnd(port: Int): Unit = {
+    FrontEnd.id = port - 3000 + 1
     val system = ActorSystem("ClusterSystem", config(port, "front-end"))
     system.actorOf(FrontEnd.props, "front-end")
     system.actorOf(WorkResultConsumer.props, "consumer")

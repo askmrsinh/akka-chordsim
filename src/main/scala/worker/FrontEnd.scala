@@ -3,7 +3,7 @@ package worker
 import java.util.UUID
 import java.util.concurrent.ThreadLocalRandom
 
-import akka.actor.{Actor, ActorLogging, Cancellable, Props, Timers}
+import akka.actor.{Actor, ActorLogging, Props, Timers}
 import akka.pattern._
 import akka.util.Timeout
 
@@ -14,7 +14,8 @@ import scala.concurrent.duration._
  */
 object FrontEnd {
 
-  def props: Props = Props(new FrontEnd)
+  var id = 3000
+  def props: Props = Props(new FrontEnd(id))
 
   private case object NotOk
   private case object Tick
@@ -22,7 +23,7 @@ object FrontEnd {
 }
 
 // #front-end
-class FrontEnd extends Actor with ActorLogging with Timers {
+class FrontEnd(id: Int) extends Actor with ActorLogging with Timers {
   import FrontEnd._
   import context.dispatcher
 
@@ -30,6 +31,7 @@ class FrontEnd extends Actor with ActorLogging with Timers {
     MasterSingleton.proxyProps(context.system),
     name = "masterProxy")
 
+  val frontEndId = id
   var workCounter = 0
 
   def nextWorkId(): String = UUID.randomUUID().toString
@@ -43,7 +45,9 @@ class FrontEnd extends Actor with ActorLogging with Timers {
   def idle: Receive = {
     case Tick =>
       workCounter += 1
-      log.info("Produced work: {}", workCounter)
+      FrontEnd.props.args.foreach(_ => print(_)
+      )
+      log.info("FrontEnd {} produced work: {}", frontEndId, workCounter)
       val work = Work(nextWorkId(), workCounter)
       context.become(busy(work))
   }
@@ -53,22 +57,23 @@ class FrontEnd extends Actor with ActorLogging with Timers {
 
     {
       case Master.Ack(workId) =>
-        log.info("Got ack for workId {}", workId)
+        log.info("FrontEnd {} got ack for workId {}", frontEndId, workId)
         val nextTick = ThreadLocalRandom.current.nextInt(3, 10).seconds
         timers.startSingleTimer(s"tick", Tick, nextTick)
         context.become(idle)
 
       case NotOk =>
-        log.info("Work {} not accepted, retry after a while", workInProgress.workId)
+        log.info("FrontEnd {}, work {} not accepted, retry after a while", frontEndId, workInProgress.workId)
         timers.startSingleTimer("retry", Retry, 3.seconds)
 
       case Retry =>
-        log.info("Retrying work {}", workInProgress.workId)
+        log.info("FrontEnd {}, Retrying work {}", frontEndId, workInProgress.workId)
         sendWork(workInProgress)
     }
   }
 
   def sendWork(work: Work): Unit = {
+    log.info("FrontEnd {} sent work: {}", frontEndId, workCounter)
     implicit val timeout = Timeout(5.seconds)
     (masterProxy ? work).recover {
       case _ => NotOk
