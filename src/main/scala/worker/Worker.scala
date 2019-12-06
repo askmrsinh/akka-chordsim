@@ -3,7 +3,6 @@ package worker
 import akka.actor.SupervisorStrategy.{Restart, Stop}
 import akka.actor._
 
-import scala.collection.mutable.HashMap
 import scala.collection.mutable
 import scala.concurrent.duration._
 
@@ -14,21 +13,22 @@ import scala.concurrent.duration._
 object Worker {
 
   var id = 0
-  var fingerTable  = new mutable.HashMap[String, String]()
-  def props(masterProxy: ActorRef): Props = Props(new Worker(masterProxy, id.toString, fingerTable))
+  var ft = new mutable.HashMap[String, String]()
+
+  def props(masterProxy: ActorRef, id: String, fingerTable: mutable.HashMap[String, String]): Props = Props(
+    new Worker(masterProxy, id.toString, fingerTable))
 
 }
 
-class Worker(masterProxy: ActorRef, id: String, ft : HashMap[String, String])
+class Worker(masterProxy: ActorRef, id: String, ft : mutable.HashMap[String, String])
   extends Actor with Timers with ActorLogging {
   import MasterWorkerProtocol._
   import context.dispatcher
 
   val workerId = id
-  //Finger Table of worker node
   var fingerTable  = ft
+  log.info("Worker {}, Fingertable: {}", id, ft)
 
-  //var successor : Worker
   val registerInterval = context.system.settings.config.getDuration("distributed-workers.worker-registration-interval").getSeconds.seconds
 
   val registerTask = context.system.scheduler.schedule(0.seconds, registerInterval, masterProxy, RegisterWorker(workerId))

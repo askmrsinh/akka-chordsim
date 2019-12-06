@@ -54,7 +54,6 @@ object Main {
 
     // two backend nodes
     startBackEnd(2551)
-    startBackEnd(2552)
     // two front-end nodes
     // startFrontEnd(3000)
     // startFrontEnd(3001)
@@ -94,22 +93,21 @@ object Main {
       name = "masterProxy")
 
     //creating worker nodes and initializing finger table for eacg worker node
-    (0 to workers-1).foreach(n =>{
+    (0 until workers).foreach(n => {
       var ft = new mutable.HashMap[String, String]()
 
       (1 to log2(workers)).map(x => {
-          ft += (x.toString ->  ((n + Math.pow(2, x-1)) % workers).toString)
+        ft += (x.toString -> ((n + Math.pow(2, x - 1)) % workers).toInt.toString)
       });
 
-      println("Printing finger table for "+ n + " : " + ft)
       Worker.id = n
-      Worker.fingerTable = ft
-      system.actorOf(Worker.props(masterProxy), s"worker-$n")}
+      Worker.ft = ft
+      system.actorOf(Worker.props(masterProxy, n.toString, ft), s"worker-$n")}
     )
+
+    def log2(x: Int): Int = (scala.math.log(x) / scala.math.log(2)).toInt
   }
   // #worker
-  val lnOf2 = scala.math.log(2) // natural log of 2
-  def log2(x: Int): Int = (scala.math.log(x) / lnOf2).toInt
 
   def config(port: Int, role: String): Config =
     ConfigFactory.parseString(s"""
