@@ -1,6 +1,6 @@
 package worker
 
-import akka.actor.{ActorLogging, ActorRef, Cancellable, Props, Timers}
+import akka.actor.{ActorLogging, ActorRef, Props, Timers}
 import akka.cluster.pubsub.{DistributedPubSub, DistributedPubSubMediator}
 import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
 
@@ -30,7 +30,6 @@ object Master {
 class Master(workTimeout: FiniteDuration) extends Timers with PersistentActor with ActorLogging {
   import Master._
   import WorkState._
-  import context.dispatcher
 
   override val persistenceId: String = "master"
 
@@ -107,6 +106,7 @@ class Master(workTimeout: FiniteDuration) extends Timers with PersistentActor wi
             val work = workState.nextWork
             persist(WorkStarted(work.workId)) { event =>
               workState = workState.updated(event)
+              // TODO: Add internal forward logic
               log.info("Giving worker {} some work {}", workerId, work.workId)
               val newWorkerState = workerState.copy(
                 status = Busy(work.workId, Deadline.now + workTimeout),

@@ -12,9 +12,9 @@ object Main {
 
   // note that 2551 and 2552 are expected to be seed nodes though, even if
   // the back-end starts at 2000
-  val backEndPortRange = 2000 to 2999
+  val backEndPortRange: Range.Inclusive = 2000 to 2999
 
-  val frontEndPortRange = 3000 to 3999
+  val frontEndPortRange: Range.Inclusive = 3000 to 3999
 
   def main(args: Array[String]): Unit = {
 //    args.headOption match {
@@ -98,11 +98,11 @@ object Main {
 
       (1 to log2(workers)).map(x => {
         ft += (x.toString -> ((n + Math.pow(2, x - 1)) % workers).toInt.toString)
-      });
+      })
 
       Worker.id = n
       Worker.ft = ft
-      system.actorOf(Worker.props(masterProxy, n.toString, ft), s"worker-$n")}
+      system.actorOf(Worker.props(masterProxy, n.toString, ft, workers), s"worker-$n")}
     )
 
     def log2(x: Int): Int = (scala.math.log(x) / scala.math.log(2)).toInt

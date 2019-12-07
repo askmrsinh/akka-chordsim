@@ -14,20 +14,22 @@ object Worker {
 
   var id = 0
   var ft = new mutable.HashMap[String, String]()
+  var workers = 1
 
-  def props(masterProxy: ActorRef, id: String, fingerTable: mutable.HashMap[String, String]): Props = Props(
-    new Worker(masterProxy, id.toString, fingerTable))
+  def props(masterProxy: ActorRef,
+            d: String, fingerTable: mutable.HashMap[String, String], workers: Int): Props = Props(
+    new Worker(masterProxy, id.toString, fingerTable, workers))
 
 }
 
-class Worker(masterProxy: ActorRef, id: String, ft : mutable.HashMap[String, String])
+class Worker(masterProxy: ActorRef, id: String, ft: mutable.HashMap[String, String], workers: Int)
   extends Actor with Timers with ActorLogging {
   import MasterWorkerProtocol._
   import context.dispatcher
 
   val workerId = id
   var fingerTable  = ft
-  log.info("Worker {}, Fingertable: {}", id, ft)
+  log.info("Worker {}, {}, Fingertable: {}", id, self.path, ft)
 
   val registerInterval = context.system.settings.config.getDuration("distributed-workers.worker-registration-interval").getSeconds.seconds
 
@@ -49,11 +51,19 @@ class Worker(masterProxy: ActorRef, id: String, ft : mutable.HashMap[String, Str
       masterProxy ! WorkerRequestsWork(workerId)
 
     case Work(workId, job: Int) =>
-      log.info("Worker {}, Got work: {}", workerId, job)
-      currentWorkId = Some(workId)
-      workExecutor ! WorkExecutor.DoWork(job)
-      context.become(working)
-
+      // TODO: Fix this
+      val workIdHash = (workId.toArray.foldLeft(0)(_ + _.toInt) % workers).toString
+      print("TESTING", workId, job, workerId, workIdHash)
+      if (workIdHash == workerId) {
+        log.info("Worker {}, Got work: {}, {}", workerId, job, workId)
+        currentWorkId = Some(workId)
+        workExecutor ! WorkExecutor.DoWork(job)
+        context.become(working)
+      } else {
+        log.info("Worker {}, Forwarded work: {}, {} to worker: {}", workerId, job, workId, workIdHash)
+        val toWorker = context.actorSelection(s"../worker-$workIdHash")
+        toWorker ! Work(workId, job)
+      }
   }
 
   def working: Receive = {
