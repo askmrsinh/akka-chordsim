@@ -20,7 +20,7 @@ class WorkExecutor extends Actor {
   import WorkExecutor._
   import context.dispatcher
 
-  def receive = {
+  def receive: PartialFunction[Any, Unit] = {
     case DoWork(n: Int) =>
       val n2 = n * n
       val result = s"$n * $n = $n2"

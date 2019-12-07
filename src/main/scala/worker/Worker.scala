@@ -27,15 +27,15 @@ class Worker(masterProxy: ActorRef, id: String, ft: mutable.HashMap[String, Stri
   import MasterWorkerProtocol._
   import context.dispatcher
 
-  val workerId = id
-  var fingerTable  = ft
+  val workerId: String = id
+  var fingerTable: mutable.HashMap[String, String] = ft
   log.info("Worker {}, {}, Fingertable: {}", id, self.path, ft)
 
-  val registerInterval = context.system.settings.config.getDuration("distributed-workers.worker-registration-interval").getSeconds.seconds
+  val registerInterval: FiniteDuration = context.system.settings.config.getDuration("distributed-workers.worker-registration-interval").getSeconds.seconds
 
-  val registerTask = context.system.scheduler.schedule(0.seconds, registerInterval, masterProxy, RegisterWorker(workerId))
+  val registerTask: Cancellable = context.system.scheduler.schedule(0.seconds, registerInterval, masterProxy, RegisterWorker(workerId))
 
-  val workExecutor = createWorkExecutor()
+  val workExecutor: ActorRef = createWorkExecutor()
 
   var currentWorkId: Option[String] = None
   def workId: String = currentWorkId match {
@@ -43,7 +43,7 @@ class Worker(masterProxy: ActorRef, id: String, ft: mutable.HashMap[String, Stri
     case None         => throw new IllegalStateException("Not working")
   }
 
-  def receive = idle
+  def receive: Receive = idle
 
   def idle: Receive = {
     case WorkIsReady =>
@@ -95,7 +95,7 @@ class Worker(masterProxy: ActorRef, id: String, ft: mutable.HashMap[String, Stri
     // if it stops this worker will also be stopped
     context.watch(context.actorOf(WorkExecutor.props, "work-executor"))
 
-  override def supervisorStrategy = OneForOneStrategy() {
+  override def supervisorStrategy: OneForOneStrategy = OneForOneStrategy() {
     case _: ActorInitializationException => Stop
     case _: Exception =>
       currentWorkId foreach { workId => masterProxy ! WorkFailed(workerId, workId) }

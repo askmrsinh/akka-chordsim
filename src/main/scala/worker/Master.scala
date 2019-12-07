@@ -42,10 +42,10 @@ class Master(workTimeout: FiniteDuration) extends Timers with PersistentActor wi
   val mediator: ActorRef = DistributedPubSub(context.system).mediator
 
   // the set of available workers is not event sourced as it depends on the current set of workers
-  private var workers = Map[String, WorkerState]()
+  private var workers: Map[String, WorkerState] = Map[String, WorkerState]()
 
   // workState is event sourced to be able to make sure work is processed even in case of crash
-  private var workState = WorkState.empty
+  private var workState: WorkState = WorkState.empty
 
 
   override def receiveRecover: Receive = {
@@ -200,7 +200,7 @@ class Master(workTimeout: FiniteDuration) extends Timers with PersistentActor wi
         // ok, might happen after standby recovery, worker state is not persisted
     }
 
-  def tooLongSinceHeardFrom(lastHeardFrom: Long) =
+  def tooLongSinceHeardFrom(lastHeardFrom: Long): Boolean =
     System.currentTimeMillis() - lastHeardFrom > considerWorkerDeadAfter.toMillis
 
 }

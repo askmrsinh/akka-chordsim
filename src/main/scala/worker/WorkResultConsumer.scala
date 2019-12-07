@@ -1,6 +1,6 @@
 package worker
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.cluster.pubsub.DistributedPubSub
 import akka.cluster.pubsub.DistributedPubSubMediator
 
@@ -11,10 +11,10 @@ object WorkResultConsumer {
 // #work-result-consumer
 class WorkResultConsumer extends Actor with ActorLogging {
 
-  val mediator = DistributedPubSub(context.system).mediator
+  val mediator: ActorRef = DistributedPubSub(context.system).mediator
   mediator ! DistributedPubSubMediator.Subscribe(Master.ResultsTopic, self)
 
-  def receive = {
+  def receive: PartialFunction[Any, Unit] = {
     case _: DistributedPubSubMediator.SubscribeAck =>
     case WorkResult(workId, result) =>
       log.info("Consumed result: {}", result)

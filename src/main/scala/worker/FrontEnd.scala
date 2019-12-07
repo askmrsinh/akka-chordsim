@@ -3,7 +3,7 @@ package worker
 import java.util.UUID
 import java.util.concurrent.ThreadLocalRandom
 
-import akka.actor.{Actor, ActorLogging, Props, Timers}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props, Timers}
 import akka.pattern._
 import akka.util.Timeout
 
@@ -27,11 +27,11 @@ class FrontEnd(id: String) extends Actor with ActorLogging with Timers {
   import FrontEnd._
   import context.dispatcher
 
-  val masterProxy = context.actorOf(
+  val masterProxy: ActorRef = context.actorOf(
     MasterSingleton.proxyProps(context.system),
     name = "masterProxy")
 
-  val frontEndId = id
+  val frontEndId: String = id
   var workCounter = 0
 
   def nextWorkId(): String = UUID.randomUUID().toString
@@ -40,7 +40,7 @@ class FrontEnd(id: String) extends Actor with ActorLogging with Timers {
     timers.startSingleTimer("tick", Tick, 5.seconds)
   }
 
-  def receive = idle
+  def receive: Receive = idle
 
   def idle: Receive = {
     case Tick =>
@@ -74,7 +74,7 @@ class FrontEnd(id: String) extends Actor with ActorLogging with Timers {
 
   def sendWork(work: Work): Unit = {
     log.info("FrontEnd {} sent work: {}", frontEndId, workCounter)
-    implicit val timeout = Timeout(5.seconds)
+    implicit val timeout: Timeout = Timeout(5.seconds)
     (masterProxy ? work).recover {
       case _ => NotOk
     } pipeTo self
