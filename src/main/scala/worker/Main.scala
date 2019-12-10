@@ -3,7 +3,6 @@ package worker
 import java.io.File
 
 import akka.actor.ActorSystem
-import akka.persistence.cassandra.testkit.CassandraLauncher
 import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.collection.mutable
@@ -45,7 +44,7 @@ object Main {
   }
 
   def startClusterInSameJvm(numberOfUsers: Int): Unit = {
-    startCassandraDatabase()
+    //startCassandraDatabase()
 
     //creating client/front end nodes
     for (i <- 3000 until 3000 + numberOfUsers) {
@@ -120,7 +119,7 @@ object Main {
    * act as the journal. Cassandra is a great choice of backend for Akka Persistence but
    * in a real application a pre-existing Cassandra cluster should be used.
    */
-  def startCassandraDatabase(): Unit = {
+/*  def startCassandraDatabase(): Unit = {
     val databaseDirectory = new File("target/cassandra-db")
     CassandraLauncher.start(
       databaseDirectory,
@@ -133,6 +132,6 @@ object Main {
     sys.addShutdownHook {
       CassandraLauncher.stop()
     }
-  }
+  }*/
 
 }

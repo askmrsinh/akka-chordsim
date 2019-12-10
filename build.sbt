@@ -13,6 +13,7 @@ libraryDependencies ++= Seq(
 
   "com.typesafe.akka" %% "akka-slf4j"                          % akkaVersion,
   "ch.qos.logback"    %  "logback-classic"                     % "1.2.3",
+  "com.typesafe.akka" %% "akka-persistence"                    % akkaVersion,
 
   // test dependencies
   "com.typesafe.akka" %% "akka-testkit"                        % akkaVersion              % "test",
