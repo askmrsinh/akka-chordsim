@@ -11,8 +11,8 @@ pipelines:
         script: # Modify the commands below to build your repository.
           - sbt test
           - docker login -u ajithnair20 -p Abcd@1234
-          - docker build -t chord-algorithm/chord:latest .
-          - docker push chord-algorithm/chord:latest
+          - docker build -t ajithnair20/chord-algorithm:latest .
+          - docker push ajithnair20/chord-algorithm:latest
         services:
           - docker
 options:
