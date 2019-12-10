@@ -1,3 +1,5 @@
+FROM openjdk:8
+
 # Install OpenJDK-8
 RUN apt-get update && \
     apt-get install -y openjdk-8-jdk && \
@@ -14,7 +16,7 @@ RUN apt-get update && \
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 RUN export JAVA_HOME
 
-FROM openjdk:8
+
 
 ENV SBT_VERSION 0.13.15
 
