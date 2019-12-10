@@ -13,3 +13,5 @@ pipelines:
           - docker login -u ajithnair20 -p Abcd@1234
           - docker build -t chord-algorithm/chord:latest .
           - docker push chord-algorithm/chord:latest
+options:
+    docker: true
