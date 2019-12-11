@@ -93,12 +93,14 @@ We followed up the following procedure to deploy the application on Docker
 + You need to setup Docker on the local machine to get container image and run the application. Follow the instructions at [Installation Guide](https://docs.docker.com/install/linux/docker-ce/ubuntu/).
 
 + After installing and setting up docker, you need to create a docker group and add current user to the group. To do so execute the following command;
+	
 	```
 	$ sudo groupadd docker
 	$ sudo usermod -aG docker $USER
 	```
 
 + Now login to the docker hub using the below command:
+	
 	```
 	$ sudo docker login
 	```
@@ -106,6 +108,7 @@ We followed up the following procedure to deploy the application on Docker
 + It prompts you to enter the username and password. Enter the details as prompted.
 
 + On successfully login, we will first have to pull the docker image from docker hub. To do so execute the below command,
+	
 	```
 	$ sudo docker pull <repo-name>
 	```
@@ -113,9 +116,10 @@ We followed up the following procedure to deploy the application on Docker
 	Here name of the repo is ajithnair20/chord-algorithm.
 
 + This command fetches the conatiner image from the docker. On completion of this, run the container image using the below command:
+	
 	```
 	$ sudo docker run <repo-name>
-	```
+    ```
 
 	On executing the command, the dependencies of the application are fetch and the application commences execution.
 
@@ -127,20 +131,25 @@ The project in its default configuration, creates 2 `front-end` nodes and 8 `wor
 To execute the program:
 1. Clone the repo on your system
 2. Compile the project using following commands
+	
 	```
 	sbt clean compile
 	```
 
 3. Now to execute the program,
+	
 	```
 	sbt run
 	```
 
 4. To run the test cases please input the following command on terminal after cloning the repo
+	
 	```
 	sbt clean compile test
 	```
+	
 	The test cases runs as follows:
+	
 	```
 	[info] HelperFunctionTests:
 	[info] - Finger Table Size Check
