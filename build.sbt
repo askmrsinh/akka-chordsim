@@ -1,4 +1,4 @@
-name := "akka-distributed-workers"
+name := "chord-algorithm"
 
 version := "1.0"
 
