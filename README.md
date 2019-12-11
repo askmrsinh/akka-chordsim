@@ -1,3 +1,4 @@
+```
 ## Akka based simulation of Chord
 
 
@@ -7,10 +8,15 @@ Team : Ashesh Singh, Ajith Nair, Karan Raghani
 
 The aim of the project is to implement a cloud simulator that uses the **Chord protocol** [[1]](https://pdos.csail.mit.edu/papers/chord:sigcomm01/chord_sigcomm.pdf).
 
-We use Akka, a toolkit for building highly concurrent, distributed, and resilient message-driven applications to implement Chord. The projects simulates assignment of task from multiple Front Ends (users) and the Worker Nodes using Chord. The implemntation is reselient to network failures, provides necessary logging to see work routing/assignment and messages passed between the nodes.
+We use Akka, a toolkit for building highly concurrent, distributed, and resilient message-driven applications to implement Chord.
+The projects simulates assignment of task from multiple Front Ends (users) and the Worker Nodes using Chord. 
+The implemntation is reselient to network failures, provides necessary logging to see work routing/assignment and 
+messages passed between the nodes.
 
 
-## INDEX
+-----
+INDEX
+-----
 1. About the Chord Protocol
 2. Some Important Files
 3. Application Design
@@ -22,22 +28,33 @@ We use Akka, a toolkit for building highly concurrent, distributed, and resilien
 7. Visualization and Demo
 
 
-## About the Chord Protocol
+---------------------------
+1. About the Chord Protocol
+---------------------------
 
-As mentioned in [[1]](https://pdos.csail.mit.edu/papers/chord:sigcomm01/chord_sigcomm.pdf), Chord is a protocol with  with communication cost and the state maintained by each node scaling logarithmically with the number of Chord nodes.
-Chord is a distributed lookup protocol that addresses the problem of efficeient lookup in a peer-to-pee application an s based on **consistent hashing**. Chord provides support for just one operation i.e. given a key, it maps the key on to a node. Data location can be easily implemented on top of Chord by associating a key with each data item , and storing the key/data pair at the node to which the key maps. Chord adapts efficiently as nodes join and leave the system.
+As mentioned in [[1]](https://pdos.csail.mit.edu/papers/chord:sigcomm01/chord_sigcomm.pdf), 
+Chord is a protocol with  with communication cost and the state maintained by each node scaling logarithmically with the number 
+of Chord nodes. Chord is a distributed lookup protocol that addresses the problem of efficeient lookup in a 
+peer-to-pee application an s based on **consistent hashing**. Chord provides support for just 
+one operation i.e. given a key, it maps the key on to a node. Data location can be easily implemented on
+top of Chord by associating a key with each data item , and storing the key/data pair at the node to which the key maps. 
+Chord adapts efficiently as nodes join and leave the system.
 
 
-## Some Important Files
+----------------------
+2 Some Important Files
+---------------------------
 
-```
-src/main/scala/com/ashessin/cs441/project/
-	Main.scala   					the main project class file
-	workers/FrontEnd.scala				actor class for making work requests
-	workers/Worker.scala				actor class for computing work requests using chord protocol
-	workers/Master.scala				utility actor class to for printing results and debugging
-	chord/Finger.scala				for creating, computing and updating finger tables
-```
+These are some of the important project files
+
+	```
+	src/main/scala/com/ashessin/cs441/project/
+		Main.scala   					the main project class file
+		workers/FrontEnd.scala				actor class for making work requests
+		workers/Worker.scala				actor class for computing work requests using chord protocol
+		workers/Master.scala				utility actor class to for printing results and debugging
+		chord/Finger.scala				for creating, computing and updating finger tables
+	```
 
 Listed below are different dependencies required for this porjects:
 
@@ -47,28 +64,51 @@ Listed below are different dependencies required for this porjects:
 * [Akka] - Actor-based message-driven runtime, Part of Lightbend Platform
 
 
-## Application Design
+---------------------
+3. Application Design
+---------------------
 
-The Chord protocol can be implemented in an iterative or recursive style[[1]](https://pdos.csail.mit.edu/papers/chord:sigcomm01/chord_sigcomm.pdf). In the iterative style, a node resolving a lookup initiates all communication: it asks a series of nodes for information from their finger tables, each time moving closer on the Chord ring to the desired successor. In the recursive style, each intermediate node forwards a request to the next node until it reaches the successor. This projects take iterative approach.
+The Chord protocol can be implemented in an iterative or recursive style[[1]](https://pdos.csail.mit.edu/papers/chord:sigcomm01/chord_sigcomm.pdf). 
+In the iterative style, a node resolving a lookup initiates all communication: it asks a series of nodes for 
+information from their finger tables, each time moving closer on the Chord ring to the desired successor. 
+In the recursive style, each intermediate node forwards a request to the next node until it reaches the successor. 
+This projects take iterative approach.
 
 The main relavent actor roles in the our Akka cluster system are
 - Front End Nodes (`front-end-$n`): simulates submission of workloads to the chord ring and consumes results
 - Worker Nodes (`worker-$n`): represents nodes in a chord ring which are responsible for serving the incoming requests.
 
-Internally, we also make use of a `master` singleton which is responsible for keeping track of work requests in the chord ring. This is only so that we can log results and get an overview of the simulation. It makes no lookup decisions on its own and all lookup is done by the worker nodes.
+Internally, we also make use of a `master` singleton which is responsible for keeping track of work requests in the chord ring. 
+This is only so that we can log results and get an overview of the simulation. 
+It makes no lookup decisions on its own and all lookup is done by the worker nodes.
 
-For the cloud simulation we perform a computation at the data/computation node that will be initialized by the client node and the final message will be correctly redirect to it. This can be considered an analogy to the data fetch and put requests. The request to perform a calculation is forwarded to an ideal node in the ring which then performs consistent hashing on the file name and direct it to one of the live computation nodes(storage units) which are present in the system (based on the entries in its finger table). If the hash value for the file is consistent with the current node then the computation is performed on the same node and front end is updated. Else a lookup is performed in the fingertable of the node to find the right successor for the work assignment and it is passsed along in the ring. 
-This process continues untill the file is stored. A simillar process is followed when the result needs to be redirected to the client request. Once the file requested is located it is returned to the master node which in turns returns it to the user. The system is initialized using the number of users, storage nodes and read/write ratio present in the configuration file of the application. Once the system is initialized, a storage node can leave and join the system.
+For the cloud simulation we perform a computation at the data/computation node that will be initialized by the
+client node and the final message will be correctly redirect to it. This can be considered an analogy to the data fetch 
+and put requests. The request to perform a calculation is forwarded to an ideal node in the ring which then performs 
+consistent hashing on the file name and direct it to one of the live computation nodes(storage units) which are present 
+in the system (based on the entries in its finger table). If the hash value for the file is consistent with the current 
+node then the computation is performed on the same node and front end is updated. Else a lookup is performed in the 
+fingertable of the node to find the right successor for the work assignment and it is passsed along in the ring. 
+This process continues untill the file is stored. A simillar process is followed when the result needs to be redirected 
+to the client request. Once the file requested is located it is returned to the master node which in turns returns it
+to the user. The system is initialized using the number of users, storage nodes and read/write ratio present in the 
+configuration file of the application. Once the system is initialized, a storage node can leave and join the system.
 
-
-## Setup Instructions (Docker)
+------------------------------
+4. Setup Instructions (Docker)
+------------------------------
 We followed up the following procedure to deploy the application on Docker
 
 + Setting Up Docker:
-	1. You can link your bitbucket repository with the dockerhhub account to push docker image evert time a build is generated using Bitbucket's pipeling.
+	
+	1. You can link your bitbucket repository with the dockerhhub account to push docker image evert time a
+	build is generated using Bitbucket's pipeling.
+	
 	2. Create and Push Repository on Docker:
 		-Add a Dockerfile to the root directory of the repository. Please note that Dockerfile does not have any extension
-		-In the Dockerfile, setup details corresponding to the container environment and dependencies. Please note that no line in docker file should preceed the From statement. An excerpt of the dockerfile would like like:
+		-In the Dockerfile, setup details corresponding to the container environment and dependencies. 
+		Please note that no line in docker file should preceed the From statement. 
+		An excerpt of the dockerfile would like like:
 
 		```
 		`FROM openjdk:8
@@ -84,15 +124,19 @@ We followed up the following procedure to deploy the application on Docker
 			update-ca-certificates -f;
 		```
 
-+ After adding the docker file, you need to add bitbucket-pipeline in which you mention build scripts which are to be executed everytime a repository is pushed on bitbucket
++ After adding the docker file, you need to add bitbucket-pipeline in which you mention build scripts 
+which are to be executed everytime a repository is pushed on bitbucket
 
 + In the bitbucket-pipeline file, mention the docker credentials and details of the the repository on dockerhub
 
-+ On completion of this, the container image is generated and pushed to the docker hub everytime you make commit and push to the repository on bitbucket.
++ On completion of this, the container image is generated and pushed to the docker hub everytime you make 
+commit and push to the repository on bitbucket.
 
-+ You need to setup Docker on the local machine to get container image and run the application. Follow the instructions at [Installation Guide](https://docs.docker.com/install/linux/docker-ce/ubuntu/).
++ You need to setup Docker on the local machine to get container image and run the application. 
+Follow the instructions at [Installation Guide](https://docs.docker.com/install/linux/docker-ce/ubuntu/).
 
-+ After installing and setting up docker, you need to create a docker group and add current user to the group. To do so execute the following command;
++ After installing and setting up docker, you need to create a docker group and add current user to the group. 
+To do so execute the following command;
 	
 	```
 	$ sudo groupadd docker
@@ -115,7 +159,8 @@ We followed up the following procedure to deploy the application on Docker
 
 	Here name of the repo is ajithnair20/chord-algorithm.
 
-+ This command fetches the conatiner image from the docker. On completion of this, run the container image using the below command:
++ This command fetches the conatiner image from the docker. On completion of this, run the container
+image using the below command:
 	
 	```
 	$ sudo docker run <repo-name>
@@ -123,10 +168,15 @@ We followed up the following procedure to deploy the application on Docker
 
 	On executing the command, the dependencies of the application are fetch and the application commences execution.
 
+----------------
+5. Usage Details
+----------------
 
-## Usage Details
-
-The project in its default configuration, creates 2 `front-end` nodes and 8 `worker` node chord ring. The front end nodes submits multiple work requests (to find the square of a number) to the `worker` nodes and consume results. Each work request has a unique UUID eg. `fe8eb4bd-100d-479a-98a9-4693a250d06b` which is hashed to a value ranging from 0-8 by the 1st worker node that receives it. It is then passed along in the ring using the implemntation details of Chord, until it reaches the target worker node.
+The project in its default configuration, creates 2 `front-end` nodes and 8 `worker` node chord ring. 
+The front end nodes submits multiple work requests (to find the square of a number) to the `worker` nodes 
+and consume results. Each work request has a unique UUID eg. `fe8eb4bd-100d-479a-98a9-4693a250d06b` which is hashed 
+to a value ranging from 0-8 by the 1st worker node that receives it. It is then passed along in the ring using 
+the implemntation details of Chord, until it reaches the target worker node.
 
 To execute the program:
 1. Clone the repo on your system
@@ -208,7 +258,8 @@ Sample of such request:
 
 ## Result Analysis
 
-For result analysis we would like to follow the complete life cycle of a request made by client worker. Following are steps through which a request goes through:
+For result analysis we would like to follow the complete life cycle of a request made by client worker.
+Following are steps through which a request goes through:
 
 1. The client produces a job to execute, indicated by its workId
 	```
@@ -220,7 +271,9 @@ For result analysis we would like to follow the complete life cycle of a request
 	[front-end-1] Got ack for workId: 6c4bb13a-a566-4a70-81b8-942520e39a6d
 	```
 
-3. Now the request reaches the node whose hashID is not consistent with the job, thus a lookup is done using its finger table and the request then is forwarded to the entry in the finger table. In this case from worker node 4 to worker node 5.
+3. Now the request reaches the node whose hashID is not consistent with the job, thus a lookup is done using
+its finger table and the request then is forwarded to the entry in the finger table. In this case from worker 
+node 4 to worker node 5.
 	```
 	[worker-4] Forward job: 58 with workId: 6c4bb13a-a566-4a70-81b8-942520e39a6d, workIdHash: 5 to successor: 5
 	```
@@ -229,20 +282,23 @@ For result analysis we would like to follow the complete life cycle of a request
 	```
 	[worker-5] Got job: 58 with workId: 6c4bb13a-a566-4a70-81b8-942520e39a6d, workIdHash: 5
 	```
+
 5.  Once the request is recieved it is processed by the node and the result is calculated.
 	```
 	[worker-5] Completed work: (6c4bb13a-a566-4a70-81b8-942520e39a6d,58,Actor[akka.tcp://ClusterSystem@127.0.0.1:3000/user/front-end-1#-958904850]) with result: 58 * 58 = 3364
 	```
+
 6. Finally the result is directed back to the correct client node.
 	```
 	[front-end-1] Consumed result: 58 * 58 = 3364 for job: 58, workId: 6c4bb13a-a566-4a70-81b8-942520e39a6d, workIdHash: 5 from [worker-worker-5]
 	```
 	
-## Additional Logs
+------------------
+6. Additional Logs
+------------------
 
 Providing longer chunk of logs for seeing extended results for multiple work assignments.
 
-```
 23:04:22.218 | default-dispatcher-20 | INFO  | .project.workers.FrontEnd | [front-end-1] Got ack for workId: aa7149ce-5b05-4dfd-941c-4b13299d636b
 23:04:22.243 | .default-dispatcher-4 | INFO  | .project.workers.FrontEnd | [front-end-2] Got ack for workId: ac1d2d34-53f7-4a04-bb70-6c69caf28be5
 23:04:22.338 | .default-dispatcher-2 | INFO  | 41.project.workers.Worker | [worker-1] Forward job: 1 with workId: aa7149ce-5b05-4dfd-941c-4b13299d636b, workIdHash: 5 to successor: 5
@@ -300,9 +356,11 @@ Providing longer chunk of logs for seeing extended results for multiple work ass
 23:05:16.324 | default-dispatcher-18 | INFO  | 41.project.workers.Worker | [worker-3] Completed work: (dafb1db0-0369-4dc7-94ef-0217259e0f19,4,Actor[akka.tcp://ClusterSystem@127.0.0.1:3000/user/front-end-1#1380129533]) with result: 4 * 4 = 16
 23:05:16.330 | .default-dispatcher-4 | INFO  | .project.workers.FrontEnd | [front-end-1] Consumed result: 4 * 4 = 16 for job: 4, workId: dafb1db0-0369-4dc7-94ef-0217259e0f19, workIdHash: 3 from [worker-worker-3]
 
-```
 
-
-## Visualization and Demo
+-------------------------
+7. Visualization and Demo
+-------------------------
 
 [https://asing80.people.uic.edu/cs441/project/](https://asing80.people.uic.edu/cs441/project/ )
+
+```
