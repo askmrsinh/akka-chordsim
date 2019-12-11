@@ -5,10 +5,12 @@ import akka.actor._
 
 import scala.collection.mutable
 import scala.concurrent.duration._
+import scala.util.matching.Regex
 
 /**
- * The worker is actually more of a middle manager, delegating the actual work
- * to the WorkExecutor, supervising it and keeping itself available to interact with the work master.
+ * We only use a single node with multiple worker abstraction.
+ * Workers communicate by passing messages for work load assignments.
+ * Actual processing is done by the Work Executor actor whose progress is monitored.
  */
 object Worker {
 
@@ -53,8 +55,17 @@ class Worker(masterProxy: ActorRef, workerId: String, workerFinger: mutable.Tree
       if (workerId == workIdHash) {
         log.info(f"[worker-$workerId] Got job: $job with workId: $workId, workIdHash: $workIdHash")
         currentWork = Some(workId, job, frontEnd)
-        workExecutor ! WorkExecutor.DoWork(job, frontEnd)
-        context.become(working)
+        val uuidPattern: Regex = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}".r
+        uuidPattern.findFirstMatchIn(workId) match {
+          case Some(_) =>
+            workExecutor ! WorkExecutor.DoWork(job, frontEnd)
+            context.become(working)
+          case _ =>
+            log.info(f"[worker-$workerId] Completed work: $work")
+            masterProxy ! WorkIsDone(workerId, workId, workId, job, frontEnd)
+            context.setReceiveTimeout(5.seconds)
+            context.become(waitForWorkIsDoneAck(workId, job, frontEnd))
+        }
         masterProxy ! WorkerForwardsWork(workerId, workId, forward = false)
       } else {
         val successor = getSuccessor(workIdHash, finger)._2

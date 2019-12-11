@@ -3,6 +3,7 @@ package com.ashessin.cs441.project.workers
 import java.util.concurrent.ThreadLocalRandom
 
 import akka.actor.{Actor, ActorRef, Props}
+import com.ashessin.cs441.project.Main.conf
 
 import scala.concurrent.duration._
 
@@ -26,7 +27,9 @@ class WorkExecutor extends Actor {
       val result = s"$n * $n = $n2"
 
       // simulate that the processing time varies
-      val randomProcessingTime = ThreadLocalRandom.current.nextInt(1, 3).seconds
+      val randomProcessingTime = ThreadLocalRandom.current.nextInt(
+        conf.getInt("minProcessingTime"),
+        conf.getInt("maxProcessingTime")).seconds
       context.system.scheduler.scheduleOnce(randomProcessingTime, sender(), WorkComplete(result, n, actorRef))
   }
 

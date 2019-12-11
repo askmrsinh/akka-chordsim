@@ -18,7 +18,7 @@ class ConfigurationTest extends FunSuite {
   }
 
   test("Movies DataBase Check"){
-    val countlines = Source.fromResource("Movies.txt").getLines()
+    val countlines = Source.fromResource("movies.txt").getLines()
 
     assert(countlines!=null)
   }

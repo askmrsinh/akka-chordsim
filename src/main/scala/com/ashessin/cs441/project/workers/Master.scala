@@ -9,7 +9,7 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration.{Deadline, FiniteDuration, _}
 
 /**
- * The master actor keep tracks of all available workers, and all scheduled and ongoing work items
+ * The master actor keep tracks of all available workers, logs them to logs
  */
 object Master {
 
@@ -47,7 +47,7 @@ class Master(workTimeout: FiniteDuration) extends Actor with Timers with ActorLo
   // workState is event sourced to be able to make sure work is processed even in case of crash
   private var workState = WorkState.empty
 
-  // Forward chain of work ids
+  // Forward chain of work ids for showing results
   private var forwardChain = mutable.HashMap[(String, String), ListBuffer[String]]()
 
 
@@ -92,7 +92,7 @@ class Master(workTimeout: FiniteDuration) extends Actor with Timers with ActorLo
             // Take a fresh work from queue
             val freshWork = workState.allWork.filter(_._2 == false).head._1
             if (!forwardChain.exists(_._1 == (freshWork.workId, workIdHash(freshWork.workId)))){
-              log.debug(s"New freshWork: $freshWork assigned to [worker-$workerId]")
+              log.debug(s"New freshWork: $freshWork sent to [worker-$workerId]")
               forwardChain((freshWork.workId, workIdHash(freshWork.workId))) = ListBuffer(workerId)
               sender() ! freshWork
             } else {
@@ -190,7 +190,7 @@ class Master(workTimeout: FiniteDuration) extends Actor with Timers with ActorLo
     if (workState.hasWork) {
       workers.foreach {
         case (_, WorkerState(ref, Idle, _)) => ref ! MasterWorkerProtocol.WorkIsReady
-        case _                           => // busy
+        case _                              => // busy
       }
     }
 

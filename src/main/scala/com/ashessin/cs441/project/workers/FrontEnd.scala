@@ -8,17 +8,20 @@ import akka.cluster.pubsub.{DistributedPubSub, DistributedPubSubMediator}
 import akka.cluster.pubsub.DistributedPubSubMediator.Put
 import akka.pattern._
 import akka.util.Timeout
+import com.ashessin.cs441.project.Main.conf
 
 import scala.concurrent.duration._
+import scala.io.{BufferedSource, Source}
 
 /**
- * Dummy front-end that periodically sends a workload to the master.
+ * Dummy front-end that periodically sends a workload.
  */
 object FrontEnd {
 
   var id = 3000
+  var altWork = false
 
-  def props(id: String): Props = Props(new FrontEnd(id.toString))
+  def props(id: String, altWork: Boolean): Props = Props(new FrontEnd(id.toString, altWork))
 
   private case object NotOk
   private case object Tick
@@ -26,7 +29,7 @@ object FrontEnd {
 }
 
 // #front-end
-class FrontEnd(id: String) extends Actor with ActorLogging with Timers {
+class FrontEnd(id: String, altWork: Boolean) extends Actor with ActorLogging with Timers {
   import FrontEnd._
   import context.dispatcher
 
@@ -39,12 +42,21 @@ class FrontEnd(id: String) extends Actor with ActorLogging with Timers {
     MasterSingleton.proxyProps(context.system),
     name = "masterProxy")
 
+  val movieFile: BufferedSource = Source.fromFile("movies.txt")
+  val movieLinesIterator: Iterator[String] = movieFile.getLines.toArray.iterator
+  movieFile.close()
+
   var workCounter = 0
 
-  def nextWorkId(): String = UUID.randomUUID().toString
+  def nextWorkId(): String = {
+    if (altWork)
+      movieLinesIterator.next()
+    else
+      UUID.randomUUID().toString
+  }
 
   override def preStart(): Unit = {
-    timers.startSingleTimer("tick", Tick, 5.seconds)
+    timers.startSingleTimer("tick", Tick, 10.seconds)
   }
 
   def receive: Receive = idle
@@ -69,13 +81,15 @@ class FrontEnd(id: String) extends Actor with ActorLogging with Timers {
     {
       case Master.Ack(workId) =>
         log.info(f"[front-end-$frontEndId] Got ack for workId: $workId")
-        val nextTick = ThreadLocalRandom.current.nextInt(15, 20).seconds
+        val nextTick = ThreadLocalRandom.current.nextInt(
+          conf.getInt("minRequest"),
+          conf.getInt("maxRequest")).seconds
         timers.startSingleTimer(s"tick", Tick, nextTick)
         context.become(idle)
 
       case NotOk =>
         log.info(f"[front-end-$frontEndId] Work with workId: ${workInProgress.workId} not accepted, retry later")
-        timers.startSingleTimer("retry", Retry, 3.seconds)
+        timers.startSingleTimer("retry", Retry, conf.getInt("retryRequest").seconds)
 
       case Retry =>
         log.info(f"[front-end-$frontEndId] Retrying workId: ${workInProgress.workId}")
@@ -84,7 +98,7 @@ class FrontEnd(id: String) extends Actor with ActorLogging with Timers {
   }
 
   def sendWork(work: Work): Unit = {
-    implicit val timeout: Timeout = Timeout(5.seconds)
+    implicit val timeout: Timeout = Timeout(conf.getInt("requestTimeout").seconds)
     (masterProxy ? work).recover {
       case _ => NotOk
     } pipeTo self
