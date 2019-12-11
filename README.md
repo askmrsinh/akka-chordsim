@@ -30,12 +30,14 @@ Chord is a distributed lookup protocol that addresses the problem of efficeient 
 
 ## Some Important Files
 
+```
 src/main/scala/com/ashessin/cs441/project/
 	Main.scala   					the main project class file
 	workers/FrontEnd.scala				actor class for making work requests
 	workers/Worker.scala				actor class for computing work requests using chord protocol
 	workers/Master.scala				utility actor class to for printing results and debugging
 	chord/Finger.scala				for creating, computing and updating finger tables
+```
 
 Listed below are different dependencies required for this porjects:
 
