@@ -1,5 +1,7 @@
 package com.ashessin.cs441.project
 
+import java.util.{Timer, TimerTask}
+
 import akka.actor.ActorSystem
 import com.ashessin.cs441.project.chord.FingerTable
 import com.ashessin.cs441.project.workers.{FrontEnd, MasterSingleton, Worker}
@@ -12,6 +14,8 @@ object Main {
   val backEndPortRange: Range.Inclusive = 2000 to 2999
 
   val frontEndPortRange: Range.Inclusive = 3000 to 3999
+
+  val conf = ConfigFactory.load("application.conf")
 
   def main(args: Array[String]): Unit = {
     args.headOption match {
@@ -37,7 +41,7 @@ object Main {
     startWorker(5001, Math.pow(2, numberOfPositions).toInt)
 
     // front-end nodes
-    val numberOfUsers = 2
+    val numberOfUsers = conf.getInt("numberOfUsers")
     require(numberOfUsers < 2000, "Due to port range limitation please use lower value for numberOfUsers")
     for (i <- 3000 until 3000 + numberOfUsers) {
       startFrontEnd(i)

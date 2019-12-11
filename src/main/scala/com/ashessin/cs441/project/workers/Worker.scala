@@ -105,31 +105,6 @@ class Worker(masterProxy: ActorRef, workerId: String, workerFinger: mutable.Tree
     masterProxy ! DeRegisterWorker(workerId)
   }
 
-//  def lookupSuccessor(id: String, finger: mutable.TreeMap[String, (Range, String)]): (Range, String) = {
-//    println("lookupSuccessor-1")
-//    (1 to finger.size).foreach(i => {
-//      val position = i.toString
-//      if (finger(position)._2 == id) {
-//        return finger(position)
-//      }
-//    })
-//    println("lookupSuccessor-2")
-//    lookupClosestPredecessor(id, finger)
-//  }
-//
-//  def lookupClosestPredecessor(id: String, finger: mutable.TreeMap[String, (Range, String)]): (Range, String) = {
-//    println("lookupClosestPredecessor-1")
-//    (1 to finger.size).foreach(i => {
-//      val position = i.toString
-//      if (finger(position)._1 contains id.toInt) {
-//        return finger(position)
-//      }
-//    })
-//
-//    println("lookupClosestPredecessor-2")
-//    finger.last._2
-//  }
-
   def getSuccessor(toFind: String, fingerTable: mutable.TreeMap[String, (Range, String)]): (Range, String) = {
     //create hashmap with key as i and value as absolute difference
     val absDiff = fingerTable.map(x => {

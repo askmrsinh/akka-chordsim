@@ -1,5 +1,5 @@
-# &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;&nbsp;Akka based simulation of Chord, a cloud overlay algorithm
-#### Course Project - CS 441 &nbsp; &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp;  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Team : Ashesh Singh, Ajith Nair, Karan Raghani
+### Akka based simulation of Chord, a cloud overlay algorithm
+#### Course Project - CS 441    Team : Ashesh Singh, Ajith Nair, Karan Raghani
 
 The aim of the project is to design and implement a cloud simulator that uses the Chord algorithm for distribution of work in the datacenters. **Chord** is a protocol and algorithm for a peer-to-peer **distributed hash table**. Chord provides support for just one operation i.e. given a key, it maps the key on to a node. Data location can be easily implemented on top of Chord by associating a key with each data item , and storing the key/data pair at the node to which the key maps. Chord adapts efficiently as nodes join and leave the system. 
 

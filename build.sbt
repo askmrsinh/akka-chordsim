@@ -19,3 +19,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-testkit"                        % akkaVersion              % "test",
   "org.scalatest"     %% "scalatest"                           % "3.0.1"                  % "test",
   "commons-io"        %  "commons-io"                          % "2.4"                    % "test")
+
+
+mainClass in (Compile, run) := Some("com.ashessin.cs441.project.Main")
