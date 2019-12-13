@@ -12,7 +12,16 @@ We use Akka, a toolkit for building highly concurrent, distributed, and resilien
 The projects simulates assignment of task from multiple Front Ends (users) and the Worker Nodes using Chord. 
 The implemntation is reselient to network failures, provides necessary logging to see work routing/assignment and 
 messages passed between the nodes.
+```
 
+Sample showing node lookup and REST invocation:
+![Basic Setup Run](doc/sample-run.gif)
+
+Sample showing Docker run:  
+![Basic Setup Run](doc/sample-run-docker.gif)
+
+
+```
 
 -----
 INDEX
@@ -74,7 +83,7 @@ information from their finger tables, each time moving closer on the Chord ring 
 In the recursive style, each intermediate node forwards a request to the next node until it reaches the successor. 
 This projects take iterative approach.
 
-The main relavent actor roles in the our Akka cluster system are
+The main relavent actor roles in the our Akka Cluster (https://doc.akka.io/docs/akka/current/cluster-usage.html) system are:
 - Front End Nodes (`front-end-$n`): simulates submission of workloads to the chord ring and consumes results
 - Worker Nodes (`worker-$n`): represents nodes in a chord ring which are responsible for serving the incoming requests.
 
@@ -94,13 +103,13 @@ to the client request. Once the file requested is located it is returned to the 
 to the user. The system is initialized using the number of users, storage nodes and read/write ratio present in the 
 configuration file of the application. Once the system is initialized, a storage node can leave and join the system.
 
+We have used Akka Management module to implement REST functionality.
 Nodes can also be dynamically removed via DELETE requests to `ClusterSystem@127.0.0.1:8558/cluster/members/{address}` 
     ```
     {
         "message": "Leaving akka.tcp://ClusterSystem@127.0.0.1:2551"
     }
     ```
-
 Further one can make GET requests to `ClusterSystem@127.0.0.1:8558/cluster/members` to get the overview of the ring.
     ```
     {
@@ -142,6 +151,10 @@ Further one can make GET requests to `ClusterSystem@127.0.0.1:8558/cluster/membe
                 ],
                 "status": "Up"
             }
+            .
+            .
+            .
+            .
         ],
         "oldest": "akka.tcp://ClusterSystem@127.0.0.1:2551",
         "oldestPerRole": {
