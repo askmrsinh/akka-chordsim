@@ -7,7 +7,7 @@ Could have added bit more documentation for (Actor's recievers at least) and the
 
 That being said, good job with your simulation!
 
-Your scores are Updated on BB!
+Your scores are Updated on BB! (You will see them when they are released)
 
 Regards,
 Mohammed Siddiq
